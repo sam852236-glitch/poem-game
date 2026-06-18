@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>詩稿尋回任務｜唐詩宋詞解謎遊戲</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:"Noto Sans TC","Microsoft JhengHei",sans-serif;
+    background:#f5f3ee;
+    min-height:100vh;
+    display:flex;
+    align-items:flex-start;
+    justify-content:center;
+    padding:1.5rem 1rem;
+  }
+  #app{
+    width:100%;
+    max-width:560px;
+  }
+  .screen{display:none}
+  .screen.active{display:block}
+
+  /* ── 標題畫面 ── */
+  #title-screen{
+    text-align:center;
+    padding:2.5rem 1.5rem;
+    background:#fff;
+    border-radius:16px;
+    border:1px solid #e0ddd5;
+  }
+  .game-emoji{font-size:52px;margin-bottom:1rem;display:block}
+  .game-title{
+    font-size:26px;
+    font-weight:700;
+    color:#2c2c2a;
+    margin-bottom:.5rem;
+  }
+  .game-subtitle{
+    font-size:15px;
+    color:#5f5e5a;
+    line-height:1.8;
+    margin-bottom:1.75rem;
+  }
+  .poem-icons{
+    display:flex;gap:12px;justify-content:center;
+    margin-bottom:1.75rem;
+    font-size:22px;
+  }
+  .poem-icon-item{
+    display:flex;flex-direction:column;align-items:center;gap:4px;
+  }
+  .poem-icon-name{font-size:11px;color:#888780}
+
+  .start-btn{
+    display:inline-block;
+    background:#2c2c2a;
+    color:#fff;
+    border:none;
+    border-radius:10px;
+    padding:.75rem 2.5rem;
+    font-size:16px;
+    font-family:inherit;
+    cursor:pointer;
+    letter-spacing:.05em;
+    transition:opacity .15s;
+  }
+  .start-btn:hover{opacity:.85}
+
+  /* ── 遊戲畫面 ── */
+  #game-screen{
+    background:#fff;
+    border-radius:16px;
+    border:1px solid #e0ddd5;
+    overflow:hidden;
+  }
+  .game-header{
+    background:#2c2c2a;
+    color:#fff;
+    padding:.85rem 1.25rem;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+  }
+  .hud-item{text-align:center}
+  .hud-label{font-size:11px;opacity:.6;margin-bottom:2px;letter-spacing:.05em}
+  .hud-value{font-size:15px;font-weight:600}
+  .hud-hp{font-size:16px}
+
+  .progress-wrap{height:5px;background:#e0ddd5}
+  .progress-fill{
+    height:100%;
+    background:#1D9E75;
+    transition:width .4s ease;
+  }
+
+  .stage-body{padding:1.25rem}
+
+  .stage-banner{
+    display:flex;align-items:center;gap:.75rem;
+    margin-bottom:1rem;
+  }
+  .stage-emoji{font-size:28px}
+  .stage-label{font-size:12px;color:#888780;margin-bottom:2px;letter-spacing:.05em}
+  .poem-title{font-size:18px;font-weight:700;color:#2c2c2a}
+  .poem-author{font-size:13px;color:#888780}
+
+  .poem-box{
+    background:#faf9f5;
+    border:1px solid #e8e6de;
+    border-radius:10px;
+    padding:1rem 1.25rem;
+    font-size:17px;
+    line-height:2.1;
+    color:#2c2c2a;
+    margin-bottom:1.1rem;
+    letter-spacing:.12em;
+  }
+  .blank{
+    display:inline-block;
+    min-width:1.5em;
+    border-bottom:2.5px solid #378ADD;
+    color:#185FA5;
+    font-weight:700;
+    text-align:center;
+  }
+
+  .q-text{
+    font-size:14px;
+    color:#5f5e5a;
+    margin-bottom:.75rem;
+  }
+  .choices{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:8px;
+    margin-bottom:1rem;
+  }
+  .choice-btn{
+    background:#fff;
+    border:1px solid #d3d1c7;
+    border-radius:9px;
+    padding:.65rem .75rem;
+    font-size:15px;
+    font-family:inherit;
+    color:#2c2c2a;
+    cursor:pointer;
+    text-align:center;
+    letter-spacing:.1em;
+    transition:background .12s, border-color .12s;
+  }
+  .choice-btn:hover:not(:disabled){background:#f5f3ee;border-color:#b4b2a9}
+  .choice-btn:disabled{cursor:default}
+  .choice-btn.correct{background:#EAF3DE;border-color:#639922;color:#27500A;font-weight:700}
+  .choice-btn.wrong{background:#FCEBEB;border-color:#A32D2D;color:#791F1F}
+
+  .feedback{
+    border-radius:9px;
+    padding:.85rem 1rem;
+    font-size:14px;
+    line-height:1.7;
+    display:none;
+    margin-bottom:1rem;
+  }
+  .feedback.show{display:block}
+  .feedback.ok{background:#EAF3DE;color:#27500A;border:1px solid #97C459}
+  .feedback.fail{background:#FCEBEB;color:#791F1F;border:1px solid #F09595}
+
+  .hint-box{
+    font-size:13px;
+    color:#5f5e5a;
+    font-style:italic;
+    margin-bottom:.75rem;
+    display:none;
+    padding:.5rem .75rem;
+    background:#faf9f5;
+    border-radius:8px;
+    border-left:3px solid #d3d1c7;
+  }
+  .hint-box.show{display:block}
+
+  .next-btn{
+    display:none;
+    background:#2c2c2a;
+    color:#fff;
+    border:none;
+    border-radius:9px;
+    padding:.65rem 1.5rem;
+    font-size:14px;
+    font-family:inherit;
+    cursor:pointer;
+    letter-spacing:.05em;
+    transition:opacity .15s;
+  }
+  .next-btn.show{display:inline-block}
+  .next-btn:hover{opacity:.85}
+
+  /* ── 結果畫面 ── */
+  #end-screen{
+    text-align:center;
+    padding:2.5rem 1.5rem;
+    background:#fff;
+    border-radius:16px;
+    border:1px solid #e0ddd5;
+  }
+  .end-emoji{font-size:52px;margin-bottom:1rem;display:block}
+  .end-title{font-size:22px;font-weight:700;color:#2c2c2a;margin-bottom:.25rem}
+  .end-score{font-size:56px;font-weight:700;color:#1D9E75;margin:1rem 0 .5rem}
+  .end-score-label{font-size:14px;color:#888780;margin-bottom:1.25rem}
+  .scrolls-row{
+    font-size:24px;
+    margin-bottom:.5rem;
+    letter-spacing:4px;
+  }
+  .scrolls-label{font-size:13px;color:#888780;margin-bottom:1.5rem}
+  .end-msg{
+    font-size:15px;color:#5f5e5a;
+    line-height:1.8;
+    margin-bottom:2rem;
+    padding:.85rem 1rem;
+    background:#f5f3ee;
+    border-radius:10px;
+  }
+  .restart-btn{
+    background:#2c2c2a;
+    color:#fff;
+    border:none;
+    border-radius:10px;
+    padding:.75rem 2rem;
+    font-size:15px;
+    font-family:inherit;
+    cursor:pointer;
+    transition:opacity .15s;
+    letter-spacing:.05em;
+  }
+  .restart-btn:hover{opacity:.85}
+
+  /* ── 響應式手機 ── */
+  @media(max-width:420px){
+    .poem-box{font-size:15px;letter-spacing:.08em}
+    .choices{grid-template-columns:1fr 1fr}
+    .choice-btn{font-size:14px}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- 標題畫面 -->
+<div id="title-screen" class="screen active">
+  <span class="game-emoji">📜</span>
+  <div class="game-title">詩稿尋回任務</div>
+  <div class="game-subtitle">
+    五首詩稿在時空中失散！<br>
+    穿越五個關卡，解開詩句謎題，<br>
+    幫詩人找回珍貴的詩稿吧！
+  </div>
+  <div class="poem-icons">
+    <div class="poem-icon-item"><span>🌙</span><span class="poem-icon-name">靜夜思</span></div>
+    <div class="poem-icon-item"><span>🌸</span><span class="poem-icon-name">春曉</span></div>
+    <div class="poem-icon-item"><span>🏔️</span><span class="poem-icon-name">登鸛雀樓</span></div>
+    <div class="poem-icon-item"><span>🍂</span><span class="poem-icon-name">楓橋夜泊</span></div>
+    <div class="poem-icon-item"><span>🌊</span><span class="poem-icon-name">水調歌頭</span></div>
+  </div>
+  <button class="start-btn" onclick="startGame()">開始解謎 →</button>
+</div>
+
+<!-- 遊戲畫面 -->
+<div id="game-screen" class="screen">
+  <div class="game-header">
+    <div class="hud-item">
+      <div class="hud-label">關卡</div>
+      <div class="hud-value" id="hud-stage">1 / 5</div>
+    </div>
+    <div class="hud-item">
+      <div class="hud-label">詩稿</div>
+      <div id="scrolls-hud" style="font-size:18px;min-width:80px;text-align:center">—</div>
+    </div>
+    <div class="hud-item">
+      <div class="hud-label">生命</div>
+      <div class="hud-hp" id="hud-hp">❤️❤️❤️</div>
+    </div>
+    <div class="hud-item">
+      <div class="hud-label">得分</div>
+      <div class="hud-value" id="hud-score">0</div>
+    </div>
+  </div>
+  <div class="progress-wrap">
+    <div class="progress-fill" id="prog" style="width:0%"></div>
+  </div>
+  <div class="stage-body">
+    <div class="stage-banner">
+      <span class="stage-emoji" id="stage-icon">🌙</span>
+      <div>
+        <div class="stage-label" id="stage-label">第一關</div>
+        <div class="poem-title" id="poem-title"></div>
+        <div class="poem-author" id="poem-author"></div>
+      </div>
+    </div>
+    <div class="poem-box" id="poem-display"></div>
+    <div class="q-text">請選出填入空格的正確文字：</div>
+    <div class="choices" id="choices"></div>
+    <div class="hint-box" id="hint-box"></div>
+    <div class="feedback" id="feedback"></div>
+    <button class="next-btn" id="next-btn" onclick="nextStage()">下一關 →</button>
+  </div>
+</div>
+
+<!-- 結果畫面 -->
+<div id="end-screen" class="screen">
+  <span class="end-emoji" id="end-emoji">🎉</span>
+  <div class="end-title" id="end-title">任務完成！</div>
+  <div class="end-score" id="end-score">100</div>
+  <div class="end-score-label">分</div>
+  <div class="scrolls-row" id="scrolls-row"></div>
+  <div class="scrolls-label" id="scrolls-label"></div>
+  <div class="end-msg" id="end-msg"></div>
+  <button class="restart-btn" onclick="restart()">再玩一次 ↺</button>
+</div>
+
+</div><!-- /#app -->
+
+<script>
+var stages = [
+  {
+    icon:"🌙", label:"第一關",
+    title:"靜夜思", author:"李白（唐）",
+    lines:["床前明月光，","疑是地上霜。","舉頭望明月，","低頭【　】故鄉。"],
+    blankLine:3, answer:"思",
+    choices:["思","望","念","憶"],
+    hint:"詩人低下頭，心中浮現的是……",
+    explain:"「低頭思故鄉」——詩人低下頭，思念起遠方的故鄉。「思」與首句「望」相對，一仰一俯，情感更加深刻。"
+  },
+  {
+    icon:"🌸", label:"第二關",
+    title:"春曉", author:"孟浩然（唐）",
+    lines:["春眠不覺曉，","處處聞啼鳥。","夜來風雨聲，","花落【　】多少。"],
+    blankLine:3, answer:"知",
+    choices:["知","有","落","開"],
+    hint:"昨夜風雨後，花瓣掉了多少呢？詩人心中……",
+    explain:"「花落知多少」——花瓣掉了多少呢？「知」字帶出詩人對春花的憐惜，也暗含春光易逝的感慨。"
+  },
+  {
+    icon:"🏔️", label:"第三關",
+    title:"登鸛雀樓", author:"王之渙（唐）",
+    lines:["白日依山盡，","黃河入海流。","欲窮千里目，","更上一【　】樓。"],
+    blankLine:3, answer:"層",
+    choices:["層","座","高","重"],
+    hint:"想要看得更遠，就要再往上爬一點……",
+    explain:"「更上一層樓」——要看盡千里風景，就要再往上登一層。這句話後來成為鼓勵人精益求精的千古名言。"
+  },
+  {
+    icon:"🍂", label:"第四關",
+    title:"楓橋夜泊", author:"張繼（唐）",
+    lines:["月落烏啼霜滿天，","江楓漁火對愁眠。","姑蘇城外【　】寺，","夜半鐘聲到客船。"],
+    blankLine:2, answer:"寒山",
+    choices:["寒山","靈岩","虎丘","天平"],
+    hint:"蘇州城外一座古老的寺廟，鐘聲在夜裡傳得好遠……",
+    explain:"「寒山寺」是蘇州著名的古剎。張繼夜泊楓橋，聽到寒山寺的鐘聲，寫下了這首流傳千古的旅愁之作。"
+  },
+  {
+    icon:"🌊", label:"第五關",
+    title:"水調歌頭", author:"蘇軾（宋）",
+    lines:["明月幾時有，把酒問青天。","不知天上宮闕，今夕是何年。","……","但願人長久，","千里【　】嬋娟。"],
+    blankLine:4, answer:"共",
+    choices:["共","賞","望","享"],
+    hint:"即使相隔千里，也希望能一起欣賞這美麗的月亮……",
+    explain:"「千里共嬋娟」——嬋娟指月亮。即使相距千里，也能共賞同一輪明月，常用來表達對遠方親友的思念與祝福。"
+  }
+];
+
+var cur = 0, score = 0, hp = 3, scrolls = [], answered = false;
+
+function startGame() {
+  document.getElementById('title-screen').classList.remove('active');
+  document.getElementById('game-screen').classList.add('active');
+  cur = 0; score = 0; hp = 3; scrolls = []; answered = false;
+  loadStage();
+}
+
+function loadStage() {
+  answered = false;
+  var s = stages[cur];
+  document.getElementById('hud-stage').textContent = (cur+1) + ' / 5';
+  updateHp();
+  document.getElementById('hud-score').textContent = score;
+  document.getElementById('scrolls-hud').textContent = scrolls.length ? scrolls.join(' ') : '—';
+  document.getElementById('prog').style.width = (cur / 5 * 100) + '%';
+  document.getElementById('stage-icon').textContent = s.icon;
+  document.getElementById('stage-label').textContent = s.label;
+  document.getElementById('poem-title').textContent = s.title;
+  document.getElementById('poem-author').textContent = s.author;
+
+  var html = '';
+  s.lines.forEach(function(ln, i) {
+    var line = i === s.blankLine
+      ? ln.replace('【　】', '<span class="blank">？</span>')
+      : ln;
+    html += line + '<br>';
+  });
+  document.getElementById('poem-display').innerHTML = html;
+
+  var cb = document.getElementById('choices');
+  cb.innerHTML = '';
+  var shuffled = s.choices.slice().sort(function(){ return Math.random() - .5; });
+  shuffled.forEach(function(c) {
+    var b = document.createElement('button');
+    b.className = 'choice-btn';
+    b.textContent = c;
+    b.onclick = function(){ answer(c, b); };
+    cb.appendChild(b);
+  });
+
+  document.getElementById('feedback').className = 'feedback';
+  document.getElementById('feedback').textContent = '';
+  document.getElementById('hint-box').className = 'hint-box';
+  document.getElementById('hint-box').textContent = '';
+  document.getElementById('next-btn').className = 'next-btn';
+}
+
+function answer(choice, btn) {
+  if (answered) return;
+  answered = true;
+  var s = stages[cur];
+  var allBtns = document.querySelectorAll('.choice-btn');
+  allBtns.forEach(function(b) {
+    b.disabled = true;
+    if (b.textContent === s.answer) b.classList.add('correct');
+  });
+
+  var fb = document.getElementById('feedback');
+  if (choice === s.answer) {
+    score += 20;
+    scrolls.push(s.icon);
+    fb.className = 'feedback show ok';
+    fb.innerHTML = '<strong>✓ 答對了！</strong><br>' + s.explain;
+    document.getElementById('hud-score').textContent = score;
+    document.getElementById('scrolls-hud').textContent = scrolls.join(' ');
+  } else {
+    btn.classList.remove('correct');
+    btn.classList.add('wrong');
+    hp = Math.max(0, hp - 1);
+    updateHp();
+    fb.className = 'feedback show fail';
+    fb.innerHTML = '<strong>✗ 答錯了！正確答案是「' + s.answer + '」</strong><br>' + s.explain;
+    var hb = document.getElementById('hint-box');
+    hb.className = 'hint-box show';
+    hb.textContent = '💡 ' + s.hint;
+  }
+
+  var nb = document.getElementById('next-btn');
+  nb.className = 'next-btn show';
+  nb.textContent = cur < 4 ? '下一關 →' : '查看結果 →';
+}
+
+function updateHp() {
+  var s = '❤️'.repeat(hp) + '🖤'.repeat(3 - hp);
+  document.getElementById('hud-hp').textContent = s;
+}
+
+function nextStage() {
+  cur++;
+  if (cur >= 5) { showEnd(); return; }
+  loadStage();
+}
+
+function showEnd() {
+  document.getElementById('game-screen').classList.remove('active');
+  document.getElementById('end-screen').classList.add('active');
+  document.getElementById('end-score').textContent = score;
+  var found = scrolls.length;
+  document.getElementById('scrolls-row').textContent = scrolls.length ? scrolls.join(' ') : '📭';
+  document.getElementById('scrolls-label').textContent = '找回 ' + found + ' / 5 份詩稿';
+
+  var emoji, title, msg;
+  if (score === 100) {
+    emoji = '🏆'; title = '完美！任務全數完成！';
+    msg = '五首詩稿全數找回，你是最強的詩稿守護者！繼續保持對唐詩宋詞的熱情！';
+  } else if (score >= 80) {
+    emoji = '🎉'; title = '太棒了！幾乎全數找回！';
+    msg = '只差一點點就完美了！再複習一下答錯的詩句，下次一定滿分！';
+  } else if (score >= 60) {
+    emoji = '👍'; title = '不錯！找回大半詩稿！';
+    msg = '多讀幾遍詩，注意每個字的用法，再來挑戰就能更上一層樓！';
+  } else {
+    emoji = '📖'; title = '詩稿還需要你！';
+    msg = '沒關係！回去多複習這幾首詩，熟讀之後再來找回所有詩稿！';
+  }
+  document.getElementById('end-emoji').textContent = emoji;
+  document.getElementById('end-title').textContent = title;
+  document.getElementById('end-msg').textContent = msg;
+}
+
+function restart() {
+  document.getElementById('end-screen').classList.remove('active');
+  document.getElementById('title-screen').classList.add('active');
+}
+</script>
+</body>
+</html>
