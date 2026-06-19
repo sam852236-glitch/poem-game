@@ -3,498 +3,748 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>詩稿尋回任務｜唐詩宋詞解謎遊戲</title>
+<title>詩魂迷宮：忘詩之霧</title>
 <style>
-  *{box-sizing:border-box;margin:0;padding:0}
-  body{
-    font-family:"Noto Sans TC","Microsoft JhengHei",sans-serif;
-    background:#f5f3ee;
-    min-height:100vh;
-    display:flex;
-    align-items:flex-start;
-    justify-content:center;
-    padding:1.5rem 1rem;
-  }
-  #app{
-    width:100%;
-    max-width:560px;
-  }
-  .screen{display:none}
-  .screen.active{display:block}
+:root {
+    --bg-color: #f7f3ea; --container-bg: rgba(255, 253, 248, 0.92);
+    --text-color: #4a4030; --sub-text: #8a7f68;
+    --accent-color: #b8742f; --success-color: #5d7a3a; --error-color: #a8403a;
+    --item-color: #c9971f; --border-color: #ddd2ba;
+    --ink-shadow: 0 2px 18px rgba(74, 64, 48, 0.12); --grid-color: rgba(184, 116, 47, 0.04);
+}
+* { box-sizing: border-box; }
+body {
+    background-color: var(--bg-color); color: var(--text-color);
+    font-family: "Noto Serif TC", "PingFang TC", "Microsoft JhengHei", serif;
+    padding: 20px; margin: 0;
+    background-image:
+        radial-gradient(circle at 20% 20%, var(--grid-color) 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, var(--grid-color) 0%, transparent 50%);
+    transition: all 1s ease;
+    min-height: 100vh;
+}
+body.bg-night {
+    --bg-color: #1c1a24; --text-color: #d8cfb8; --accent-color: #c9a14f;
+    --border-color: #3a3548; --container-bg: rgba(30, 28, 38, 0.92); --sub-text: #9892a8;
+}
+body.bg-ending { background: #0d0c14 !important; overflow: hidden !important; }
 
-  /* ── 標題畫面 ── */
-  #title-screen{
-    text-align:center;
-    padding:2.5rem 1.5rem;
-    background:#fff;
-    border-radius:16px;
-    border:1px solid #e0ddd5;
-  }
-  .game-emoji{font-size:52px;margin-bottom:1rem;display:block}
-  .game-title{
-    font-size:26px;
-    font-weight:700;
-    color:#2c2c2a;
-    margin-bottom:.5rem;
-  }
-  .game-subtitle{
-    font-size:15px;
-    color:#5f5e5a;
-    line-height:1.8;
-    margin-bottom:1.75rem;
-  }
-  .poem-icons{
-    display:flex;gap:12px;justify-content:center;
-    margin-bottom:1.75rem;
-    font-size:22px;
-  }
-  .poem-icon-item{
-    display:flex;flex-direction:column;align-items:center;gap:4px;
-  }
-  .poem-icon-name{font-size:11px;color:#888780}
+.container { max-width: 720px; margin: 10px auto; background: var(--container-bg); padding: 28px; border-radius: 14px; border: 1px solid var(--border-color); box-shadow: var(--ink-shadow); position: relative; transition: all 1s ease; }
+.container.ending-fullscreen { max-width: 100% !important; margin: 0 !important; padding: 0 !important; background: transparent !important; border: none !important; box-shadow: none !important; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 90vh; }
 
-  .start-btn{
-    display:inline-block;
-    background:#2c2c2a;
-    color:#fff;
-    border:none;
-    border-radius:10px;
-    padding:.75rem 2.5rem;
-    font-size:16px;
-    font-family:inherit;
-    cursor:pointer;
-    letter-spacing:.05em;
-    transition:opacity .15s;
-  }
-  .start-btn:hover{opacity:.85}
+.status-bar { display: flex; justify-content: space-between; align-items: center; background: rgba(184, 116, 47, 0.08); padding: 12px 16px; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 20px; flex-wrap: wrap; gap: 8px; }
+.inventory-items { display: flex; gap: 8px; font-size: 22px; min-height: 28px; align-items: center; flex-wrap: wrap; }
+.inv-item { cursor: pointer; transition: transform 0.2s; padding: 2px 5px; border-radius: 5px; }
+.inv-item:hover { transform: scale(1.25); background: rgba(184, 116, 47, 0.12); }
+.potion-box { color: var(--success-color); font-weight: bold; display: flex; align-items: center; gap: 5px; font-size: 14px; background: rgba(93, 122, 58, 0.1); padding: 5px 10px; border-radius: 5px; border: 1px solid var(--success-color); white-space: nowrap; }
+.location-badge { color: var(--accent-color); font-weight: bold; font-size: 14px; display: flex; align-items: center; gap: 5px; }
 
-  /* ── 遊戲畫面 ── */
-  #game-screen{
-    background:#fff;
-    border-radius:16px;
-    border:1px solid #e0ddd5;
-    overflow:hidden;
-  }
-  .game-header{
-    background:#2c2c2a;
-    color:#fff;
-    padding:.85rem 1.25rem;
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-  }
-  .hud-item{text-align:center}
-  .hud-label{font-size:11px;opacity:.6;margin-bottom:2px;letter-spacing:.05em}
-  .hud-value{font-size:15px;font-weight:600}
-  .hud-hp{font-size:16px}
+.hologram-map { background: rgba(184, 116, 47, 0.05); border: 1px solid var(--border-color); padding: 14px; border-radius: 8px; margin-top: 22px; }
+.map-title { font-size: 12px; color: var(--accent-color); font-weight: bold; margin-bottom: 10px; letter-spacing: 1px; text-align: center; }
+.map-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.map-cell { background: rgba(255,255,255,0.4); border: 1px solid var(--border-color); padding: 8px 4px; border-radius: 6px; text-align: center; font-size: 11px; color: var(--sub-text); cursor: not-allowed; transition: all 0.3s; }
+.map-cell.unlocked { border-color: var(--sub-text); color: var(--text-color); cursor: pointer; }
+.map-cell.unlocked:hover { border-color: var(--accent-color); background: rgba(184, 116, 47, 0.08); }
+.map-cell.current { border-color: var(--item-color); color: var(--item-color); font-weight: bold; background: rgba(201, 151, 31, 0.12); cursor: pointer; }
 
-  .progress-wrap{height:5px;background:#e0ddd5}
-  .progress-fill{
-    height:100%;
-    background:#1D9E75;
-    transition:width .4s ease;
-  }
+h1 { text-align: center; font-size: 26px; letter-spacing: 4px; margin-bottom: 4px; font-weight: 700; }
+.subtitle { text-align: center; color: var(--sub-text); margin-bottom: 22px; font-size: 13px; letter-spacing: 1px; }
 
-  .stage-body{padding:1.25rem}
+.story-box { background: rgba(184, 116, 47, 0.06); border-left: 4px solid var(--accent-color); padding: 14px 18px; margin-bottom: 18px; border-radius: 0 8px 8px 0; font-size: 14px; line-height: 1.8; }
+.story-text { font-size: 1.05em; line-height: 1.9; margin-bottom: 18px; padding: 22px; border: 1px solid var(--accent-color); border-radius: 8px; background: rgba(255,255,255,0.5); text-align: left; white-space: pre-wrap; }
 
-  .stage-banner{
-    display:flex;align-items:center;gap:.75rem;
-    margin-bottom:1rem;
-  }
-  .stage-emoji{font-size:28px}
-  .stage-label{font-size:12px;color:#888780;margin-bottom:2px;letter-spacing:.05em}
-  .poem-title{font-size:18px;font-weight:700;color:#2c2c2a}
-  .poem-author{font-size:13px;color:#888780}
+.doors-container { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 18px; }
+.door-card { background: rgba(255,255,255,0.5); border: 2px solid var(--border-color); border-radius: 10px; padding: 18px 10px; text-align: center; cursor: pointer; transition: all 0.3s; }
+.door-card:hover { border-color: var(--accent-color); transform: translateY(-3px); background: rgba(184,116,47,0.06); }
+.door-dir { font-size: 12px; color: var(--sub-text); margin-bottom: 6px; font-weight: bold; }
+.door-name { font-weight: bold; color: var(--text-color); font-size: 15px; }
+.door-unknown { color: var(--sub-text); font-style: italic; }
 
-  .poem-box{
-    background:#faf9f5;
-    border:1px solid #e8e6de;
-    border-radius:10px;
-    padding:1rem 1.25rem;
-    font-size:17px;
-    line-height:2.1;
-    color:#2c2c2a;
-    margin-bottom:1.1rem;
-    letter-spacing:.12em;
-  }
-  .blank{
-    display:inline-block;
-    min-width:1.5em;
-    border-bottom:2.5px solid #378ADD;
-    color:#185FA5;
-    font-weight:700;
-    text-align:center;
-  }
+.modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(20,18,14,0.75); z-index: 1000; display: flex; justify-content: center; align-items: center; padding: 20px; }
+.item-box { background: var(--bg-color); border: 1px solid var(--item-color); padding: 28px; border-radius: 12px; text-align: center; width: 100%; max-width: 380px; position: relative; max-height: 88vh; overflow-y: auto; }
+.item-icon { font-size: 54px; margin-bottom: 12px; }
+.item-title { color: var(--item-color); font-size: 20px; font-weight: bold; margin-bottom: 12px; }
+.item-desc { font-size: 14px; line-height: 1.7; margin-bottom: 18px; }
+.inspect-text { color: var(--accent-color); font-weight: bold; font-size: 14px; line-height: 1.7; margin-top: 14px; padding: 14px; border: 1px dashed var(--accent-color); background: rgba(184,116,47,0.05); border-radius: 8px; white-space: pre-wrap; text-align: left; }
 
-  .q-text{
-    font-size:14px;
-    color:#5f5e5a;
-    margin-bottom:.75rem;
-  }
-  .choices{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:8px;
-    margin-bottom:1rem;
-  }
-  .choice-btn{
-    background:#fff;
-    border:1px solid #d3d1c7;
-    border-radius:9px;
-    padding:.65rem .75rem;
-    font-size:15px;
-    font-family:inherit;
-    color:#2c2c2a;
-    cursor:pointer;
-    text-align:center;
-    letter-spacing:.1em;
-    transition:background .12s, border-color .12s;
-  }
-  .choice-btn:hover:not(:disabled){background:#f5f3ee;border-color:#b4b2a9}
-  .choice-btn:disabled{cursor:default}
-  .choice-btn.correct{background:#EAF3DE;border-color:#639922;color:#27500A;font-weight:700}
-  .choice-btn.wrong{background:#FCEBEB;border-color:#A32D2D;color:#791F1F}
+.combine-container { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 18px; }
+.combine-slot { flex: 1; border: 2px dashed var(--sub-text); padding: 18px; border-radius: 10px; text-align: center; cursor: pointer; color: var(--sub-text); font-weight: bold; background: rgba(255,255,255,0.3); transition: all 0.3s; font-size: 28px; min-height: 80px; display: flex; align-items: center; justify-content: center; }
+.combine-slot:hover { border-color: var(--item-color); color: var(--item-color); }
+.combine-slot.active-slot { border-color: var(--accent-color); border-style: solid; background: rgba(184,116,47,0.08); color: var(--text-color); transform: scale(1.04); }
+.combine-slot.filled { border-color: var(--success-color); border-style: solid; }
 
-  .feedback{
-    border-radius:9px;
-    padding:.85rem 1rem;
-    font-size:14px;
-    line-height:1.7;
-    display:none;
-    margin-bottom:1rem;
-  }
-  .feedback.show{display:block}
-  .feedback.ok{background:#EAF3DE;color:#27500A;border:1px solid #97C459}
-  .feedback.fail{background:#FCEBEB;color:#791F1F;border:1px solid #F09595}
+.quiz-card { background: rgba(255,255,255,0.45); padding: 22px; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 18px; }
+.type-badge { display: inline-block; padding: 4px 10px; font-size: 11px; border-radius: 20px; font-weight: bold; margin-bottom: 14px; background: rgba(184,116,47,0.12); color: var(--accent-color); border: 1px solid var(--accent-color); }
+.question-text { font-size: 16px; font-weight: bold; line-height: 1.7; margin-bottom: 18px; white-space: pre-wrap; }
+.option-item { background: rgba(255,255,255,0.5); border: 1px solid var(--border-color); padding: 13px 16px; margin-bottom: 10px; border-radius: 8px; display: flex; align-items: center; cursor: pointer; transition: all 0.2s; text-align: left; }
+.option-item:hover { border-color: var(--accent-color); background: rgba(184,116,47,0.05); }
+.option-item input { margin-right: 14px; transform: scale(1.2); cursor: pointer; }
+.sort-item { background: rgba(255,255,255,0.5); border: 1px solid var(--border-color); padding: 11px 16px; margin-bottom: 9px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; }
+.sort-text { flex-grow: 1; padding-right: 14px; font-size: 14px; line-height: 1.6; }
+.sort-btns { display: flex; gap: 6px; }
+.sort-btn { background: rgba(184,116,47,0.1); color: var(--accent-color); border: 1px solid var(--border-color); padding: 6px 11px; border-radius: 6px; cursor: pointer; font-size: 12px; }
+textarea { width: 100%; height: 110px; background: rgba(255,255,255,0.6); color: var(--text-color); border: 1px solid var(--border-color); border-radius: 8px; padding: 14px; box-sizing: border-box; resize: none; font-size: 14px; line-height: 1.6; font-family: inherit; }
 
-  .hint-box{
-    font-size:13px;
-    color:#5f5e5a;
-    font-style:italic;
-    margin-bottom:.75rem;
-    display:none;
-    padding:.5rem .75rem;
-    background:#faf9f5;
-    border-radius:8px;
-    border-left:3px solid #d3d1c7;
-  }
-  .hint-box.show{display:block}
+button.action-btn { background: transparent; color: var(--accent-color); border: 2px solid var(--accent-color); padding: 13px 18px; width: 100%; border-radius: 8px; cursor: pointer; font-size: 15px; font-weight: bold; margin-top: 14px; letter-spacing: 2px; transition: all 0.3s; font-family: inherit; }
+button.action-btn:hover:not(:disabled) { background: var(--accent-color); color: #fff; }
+button.potion-btn { border-color: var(--success-color); color: var(--success-color); margin-bottom: 14px; display: none; }
+button.potion-btn:hover { background: var(--success-color); color: #fff; }
 
-  .next-btn{
-    display:none;
-    background:#2c2c2a;
-    color:#fff;
-    border:none;
-    border-radius:9px;
-    padding:.65rem 1.5rem;
-    font-size:14px;
-    font-family:inherit;
-    cursor:pointer;
-    letter-spacing:.05em;
-    transition:opacity .15s;
-  }
-  .next-btn.show{display:inline-block}
-  .next-btn:hover{opacity:.85}
+.message { margin-top: 18px; padding: 14px; border-radius: 8px; font-weight: bold; text-align: left; font-size: 14px; display: none; white-space: pre-wrap; line-height: 1.6; }
+.msg-success { display: block; background: rgba(93,122,58,0.1); color: var(--success-color); border: 1px solid var(--success-color); text-align: center; }
+.msg-error { display: block; background: rgba(168,64,58,0.1); color: var(--error-color); border: 1px solid var(--error-color); }
+.msg-hint { background: rgba(93,122,58,0.06); border: 1px dashed var(--success-color); padding: 11px; border-radius: 8px; font-weight: normal; margin-bottom: 9px; text-align: left; font-size: 13px; line-height: 1.6; }
+.hidden { display: none !important; }
+input.text-input { width: 100%; padding: 13px; background: rgba(255,255,255,0.6); color: var(--text-color); border: 1px solid var(--border-color); border-radius: 8px; box-sizing: border-box; font-size: 15px; text-align: center; font-family: inherit; }
+.word-count { text-align: right; font-size: 12px; color: var(--sub-text); margin-top: 5px; }
 
-  /* ── 結果畫面 ── */
-  #end-screen{
-    text-align:center;
-    padding:2.5rem 1.5rem;
-    background:#fff;
-    border-radius:16px;
-    border:1px solid #e0ddd5;
-  }
-  .end-emoji{font-size:52px;margin-bottom:1rem;display:block}
-  .end-title{font-size:22px;font-weight:700;color:#2c2c2a;margin-bottom:.25rem}
-  .end-score{font-size:56px;font-weight:700;color:#1D9E75;margin:1rem 0 .5rem}
-  .end-score-label{font-size:14px;color:#888780;margin-bottom:1.25rem}
-  .scrolls-row{
-    font-size:24px;
-    margin-bottom:.5rem;
-    letter-spacing:4px;
-  }
-  .scrolls-label{font-size:13px;color:#888780;margin-bottom:1.5rem}
-  .end-msg{
-    font-size:15px;color:#5f5e5a;
-    line-height:1.8;
-    margin-bottom:2rem;
-    padding:.85rem 1rem;
-    background:#f5f3ee;
-    border-radius:10px;
-  }
-  .restart-btn{
-    background:#2c2c2a;
-    color:#fff;
-    border:none;
-    border-radius:10px;
-    padding:.75rem 2rem;
-    font-size:15px;
-    font-family:inherit;
-    cursor:pointer;
-    transition:opacity .15s;
-    letter-spacing:.05em;
-  }
-  .restart-btn:hover{opacity:.85}
-
-  /* ── 響應式手機 ── */
-  @media(max-width:420px){
-    .poem-box{font-size:15px;letter-spacing:.08em}
-    .choices{grid-template-columns:1fr 1fr}
-    .choice-btn{font-size:14px}
-  }
+/* ===== 結局動畫 ===== */
+.ending-items-container { position: relative; height: 380px; width: 100%; max-width: 600px; display: flex; justify-content: center; align-items: center; margin-top: 20px; }
+@keyframes fadeOutText { 0% { opacity: 1; } 80% { opacity: 1; } 100% { opacity: 0; } }
+.ending-item { position: absolute; font-size: 32px; opacity: 0; animation: converge 3s forwards; }
+@keyframes converge { 0% { transform: translate(var(--startX), var(--startY)) scale(1); opacity: 0; } 20% { opacity: 1; } 80% { transform: translate(0,0) scale(0.5); opacity: 1; filter: brightness(1.4); } 100% { transform: translate(0,0) scale(0); opacity: 0; filter: brightness(2); } }
+.scroll-glow { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 2px; height: 200px; background: #fff3da; box-shadow: 0 0 40px 20px #fff3da, 0 0 100px 50px #c9a14f; opacity: 0; z-index: 5; animation: explodeLight 5s 4.5s forwards; }
+@keyframes explodeLight { 0% { opacity:0; width:2px; } 10% { opacity:1; width:20px; box-shadow:0 0 70px 35px #fff3da; } 100% { opacity:1; width:1800px; height:1800px; border-radius:50%; box-shadow:0 0 250px 120px #fff3da, 0 0 500px 300px #c9a14f; background:#fff8ec; } }
+.flying-blossom { position: absolute; font-size: 60px; opacity: 0; z-index: 20; animation: flyTowards 4s 5s forwards; }
+@keyframes flyTowards { 0% { opacity:0; transform: scale(0.1); } 20% { opacity:1; } 100% { opacity:0; transform: scale(15); } }
+.final-text-victory { position: absolute; z-index: 30; opacity: 0; color: #2a2410; text-shadow: 0 0 20px #fff3da, 0 0 30px #c9a14f; text-align: center; animation: showVictory 2s 6.8s forwards; }
+@keyframes showVictory { 0% { opacity:0; transform: translateY(25px); } 100% { opacity:1; transform: translateY(0); } }
 </style>
 </head>
 <body>
-<div id="app">
 
-<!-- 標題畫面 -->
-<div id="title-screen" class="screen active">
-  <span class="game-emoji">📜</span>
-  <div class="game-title">詩稿尋回任務</div>
-  <div class="game-subtitle">
-    五首詩稿在時空中失散！<br>
-    穿越五個關卡，解開詩句謎題，<br>
-    幫詩人找回珍貴的詩稿吧！
+<div class="container" id="main-container">
+  <div id="status-ui" class="status-bar hidden">
+    <div class="location-badge" id="current-location">📍 載入中...</div>
+    <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
+      <div id="inventory-list" class="inventory-items"></div>
+      <div class="potion-box" title="消耗墨水可獲取提示">🖋️ 墨水 x<span id="potion-count">0</span></div>
+    </div>
   </div>
-  <div class="poem-icons">
-    <div class="poem-icon-item"><span>🌙</span><span class="poem-icon-name">靜夜思</span></div>
-    <div class="poem-icon-item"><span>🌸</span><span class="poem-icon-name">春曉</span></div>
-    <div class="poem-icon-item"><span>🏔️</span><span class="poem-icon-name">登鸛雀樓</span></div>
-    <div class="poem-icon-item"><span>🍂</span><span class="poem-icon-name">楓橋夜泊</span></div>
-    <div class="poem-icon-item"><span>🌊</span><span class="poem-icon-name">水調歌頭</span></div>
-  </div>
-  <button class="start-btn" onclick="startGame()">開始解謎 →</button>
-</div>
 
-<!-- 遊戲畫面 -->
-<div id="game-screen" class="screen">
-  <div class="game-header">
-    <div class="hud-item">
-      <div class="hud-label">關卡</div>
-      <div class="hud-value" id="hud-stage">1 / 5</div>
-    </div>
-    <div class="hud-item">
-      <div class="hud-label">詩稿</div>
-      <div id="scrolls-hud" style="font-size:18px;min-width:80px;text-align:center">—</div>
-    </div>
-    <div class="hud-item">
-      <div class="hud-label">生命</div>
-      <div class="hud-hp" id="hud-hp">❤️❤️❤️</div>
-    </div>
-    <div class="hud-item">
-      <div class="hud-label">得分</div>
-      <div class="hud-value" id="hud-score">0</div>
-    </div>
-  </div>
-  <div class="progress-wrap">
-    <div class="progress-fill" id="prog" style="width:0%"></div>
-  </div>
-  <div class="stage-body">
-    <div class="stage-banner">
-      <span class="stage-emoji" id="stage-icon">🌙</span>
-      <div>
-        <div class="stage-label" id="stage-label">第一關</div>
-        <div class="poem-title" id="poem-title"></div>
-        <div class="poem-author" id="poem-author"></div>
+  <div id="login-section">
+    <h1>詩魂迷宮</h1>
+    <div class="subtitle">忘詩之霧 // 詩稿尋回之旅</div>
+    <div class="quiz-card" style="text-align:center;">
+      <div class="story-box" style="text-align:left;">
+        【傳說】... 一場「忘詩之霧」籠罩了詩國，五位詩人的詩稿被封印在迷宮深處。<br><br>
+        ⚠️ 你必須穿越迷宮，解開詩句謎題，蒐集道具，找回失落的詩稿，喚醒沉睡的詩魂。
       </div>
+      <button type="button" class="action-btn" onclick="startGame()">踏入迷宮 →</button>
     </div>
-    <div class="poem-box" id="poem-display"></div>
-    <div class="q-text">請選出填入空格的正確文字：</div>
-    <div class="choices" id="choices"></div>
-    <div class="hint-box" id="hint-box"></div>
-    <div class="feedback" id="feedback"></div>
-    <button class="next-btn" id="next-btn" onclick="nextStage()">下一關 →</button>
+  </div>
+
+  <div id="game-content" class="hidden"></div>
+
+  <div id="map-ui" class="hologram-map hidden">
+    <div class="map-title">🗺️ 詩境迷宮圖（可跳轉已探索之地）</div>
+    <div class="map-grid" id="dynamic-map-grid"></div>
   </div>
 </div>
 
-<!-- 結果畫面 -->
-<div id="end-screen" class="screen">
-  <span class="end-emoji" id="end-emoji">🎉</span>
-  <div class="end-title" id="end-title">任務完成！</div>
-  <div class="end-score" id="end-score">100</div>
-  <div class="end-score-label">分</div>
-  <div class="scrolls-row" id="scrolls-row"></div>
-  <div class="scrolls-label" id="scrolls-label"></div>
-  <div class="end-msg" id="end-msg"></div>
-  <button class="restart-btn" onclick="restart()">再玩一次 ↺</button>
+<div id="item-modal" class="modal-overlay hidden">
+  <div class="item-box">
+    <div style="position:absolute; top:14px; right:18px; cursor:pointer; font-size:22px; color:var(--sub-text);" onclick="closeItemModal()">✖</div>
+    <div id="modal-icon" class="item-icon"></div>
+    <div id="modal-title" class="item-title"></div>
+    <div id="modal-desc" class="item-desc"></div>
+    <button type="button" id="modal-inspect-btn" class="action-btn" onclick="inspectItem()">🔍 深度觀察</button>
+    <div id="modal-inspect-text" class="inspect-text hidden"></div>
+  </div>
 </div>
-
-</div><!-- /#app -->
 
 <script>
-var stages = [
-  {
-    icon:"🌙", label:"第一關",
-    title:"靜夜思", author:"李白（唐）",
-    lines:["床前明月光，","疑是地上霜。","舉頭望明月，","低頭【　】故鄉。"],
-    blankLine:3, answer:"思",
-    choices:["思","望","念","憶"],
-    hint:"詩人低下頭，心中浮現的是……",
-    explain:"「低頭思故鄉」——詩人低下頭，思念起遠方的故鄉。「思」與首句「望」相對，一仰一俯，情感更加深刻。"
-  },
-  {
-    icon:"🌸", label:"第二關",
-    title:"春曉", author:"孟浩然（唐）",
-    lines:["春眠不覺曉，","處處聞啼鳥。","夜來風雨聲，","花落【　】多少。"],
-    blankLine:3, answer:"知",
-    choices:["知","有","落","開"],
-    hint:"昨夜風雨後，花瓣掉了多少呢？詩人心中……",
-    explain:"「花落知多少」——花瓣掉了多少呢？「知」字帶出詩人對春花的憐惜，也暗含春光易逝的感慨。"
-  },
-  {
-    icon:"🏔️", label:"第三關",
-    title:"登鸛雀樓", author:"王之渙（唐）",
-    lines:["白日依山盡，","黃河入海流。","欲窮千里目，","更上一【　】樓。"],
-    blankLine:3, answer:"層",
-    choices:["層","座","高","重"],
-    hint:"想要看得更遠，就要再往上爬一點……",
-    explain:"「更上一層樓」——要看盡千里風景，就要再往上登一層。這句話後來成為鼓勵人精益求精的千古名言。"
-  },
-  {
-    icon:"🍂", label:"第四關",
-    title:"楓橋夜泊", author:"張繼（唐）",
-    lines:["月落烏啼霜滿天，","江楓漁火對愁眠。","姑蘇城外【　】寺，","夜半鐘聲到客船。"],
-    blankLine:2, answer:"寒山",
-    choices:["寒山","靈岩","虎丘","天平"],
-    hint:"蘇州城外一座古老的寺廟，鐘聲在夜裡傳得好遠……",
-    explain:"「寒山寺」是蘇州著名的古剎。張繼夜泊楓橋，聽到寒山寺的鐘聲，寫下了這首流傳千古的旅愁之作。"
-  },
-  {
-    icon:"🌊", label:"第五關",
-    title:"水調歌頭", author:"蘇軾（宋）",
-    lines:["明月幾時有，把酒問青天。","不知天上宮闕，今夕是何年。","……","但願人長久，","千里【　】嬋娟。"],
-    blankLine:4, answer:"共",
-    choices:["共","賞","望","享"],
-    hint:"即使相隔千里，也希望能一起欣賞這美麗的月亮……",
-    explain:"「千里共嬋娟」——嬋娟指月亮。即使相距千里，也能共賞同一輪明月，常用來表達對遠方親友的思念與祝福。"
-  }
+// ================= 道具資料庫 =================
+const itemDB = {
+  '🌙': { title:"靜夜思·月光碎片", desc:"李白詩稿散落的第一片月光。", inspect:"碎片中浮現微光文字：『舉頭望明月，低頭思故鄉。』似乎還缺一個字……" },
+  '🌸': { title:"春曉·落花殘瓣", desc:"孟浩然詩稿沾染的春日花瓣。", inspect:"花瓣上沾著夜雨痕跡，隱約有字跡：『夜來風雨聲』" },
+  '🏔️': { title:"鸛雀樓·登高令牌", desc:"王之渙詩稿化成的玉令。", inspect:"令牌正面刻著黃河奔流的紋路，背面則是空白，等待填上最後一字。" },
+  '🍂': { title:"楓橋·寒鐘餘音", desc:"張繼詩稿凝結的鐘聲殘響。", inspect:"餘音中迴盪著姑蘇城外的鐘聲，似乎能指引一座寺廟的方位。" },
+  '🌊': { title:"水調歌頭·千里月魂", desc:"蘇軾詩稿匯聚的月光精魄。", inspect:"月魂中浮現一句未完的詞：『但願人長久，千里＿嬋娟。』" },
+  '📜': { title:"忘詩之霧凝結卷", desc:"霧氣凝結而成的神秘卷軸。", inspect:"卷軸上寫著：『五詩合一，詩魂方醒。』" },
+  '🖌️': { title:"墨仙的斷筆", desc:"傳說中墨仙留下的筆鋒。", inspect:"筆尖還殘留一絲墨香，似乎能喚醒沉睡的詩句。" },
+  '🏮': { title:"詩魂引路燈", desc:"照亮迷宮深處的微光燈籠。", inspect:"燈籠裡的火光忽明忽暗，彷彿在回應你的腳步聲。" },
+  '🗝️': { title:"詩境融合鑰", desc:"融合月光與燈火而成的鑰匙。", inspect:"鑰匙散發溫潤的光，似乎能開啟通往詩魂核心的門。" },
+  '🕊️': { title:"詩魂覺醒之羽", desc:"象徵詩魂甦醒的羽毛。", inspect:"羽毛輕盈如詩，握在手中彷彿能聽見五首詩同時被吟誦。" }
+};
+
+function getItemInfo(rawIcon) {
+  const cleanStr = s => s ? s.replace(/\uFE0F/g, '').trim() : '';
+  const target = cleanStr(rawIcon);
+  for (let key in itemDB) { if (cleanStr(key) === target) return itemDB[key]; }
+  return { title:"未知卷軸", desc:"無法辨識的詩意碎片。", inspect:"沒有發現特別之處。" };
+}
+
+// ================= NPC 隨機字音字形題庫 =================
+const trapDatabase = [
+  { q:"「偃」旗息鼓的注音是？", options:[{t:"ㄧㄢˇ",c:true},{t:"ㄧㄢˋ",c:false}] },
+  { q:"「ㄕㄨˋ」立志向的國字是？", options:[{t:"樹",c:true},{t:"豎",c:false}] },
+  { q:"「ㄆㄧㄣˊ」ㄆㄧㄣˊ叫好的國字是？", options:[{t:"頻",c:true},{t:"蘋",c:false}] },
+  { q:"眼「ㄇㄡˊ」的國字是？", options:[{t:"眸",c:true},{t:"謀",c:false}] },
+  { q:"「ㄍㄨ」負期望的國字是？", options:[{t:"辜",c:true},{t:"孤",c:false}] },
+  { q:"不「ㄎㄢ」入目的國字是？", options:[{t:"堪",c:true},{t:"勘",c:false}] },
+  { q:"一敗「ㄊㄨˊ」地的國字是？", options:[{t:"塗",c:true},{t:"途",c:false}] },
+  { q:"陰「霾」消散的注音是？", options:[{t:"ㄇㄞˊ",c:true},{t:"ㄌㄧˊ",c:false}] },
+  { q:"「蟄」伏的注音是？", options:[{t:"ㄓˊ",c:true},{t:"ㄓㄜˊ",c:false}] },
+  { q:"「ㄅㄢ」回一城的國字是？", options:[{t:"扳",c:true},{t:"搬",c:false}] },
+  { q:"「揶」揄的注音是？", options:[{t:"ㄧㄝˊ",c:true},{t:"ㄧㄝ",c:false}] },
+  { q:"「鴻」雁的注音是？", options:[{t:"ㄏㄨㄥˊ",c:true},{t:"ㄍㄨㄥˊ",c:false}] },
+  { q:"「皎」潔的注音是？", options:[{t:"ㄐㄧㄠˇ",c:true},{t:"ㄐㄧㄠˋ",c:false}] },
+  { q:"「徘徊」的注音是？", options:[{t:"ㄆㄞˊㄏㄨㄞˊ",c:true},{t:"ㄈㄟˊㄏㄨㄞˊ",c:false}] },
+  { q:"「ㄔㄡˊ」緒滿懷的國字是？", options:[{t:"愁",c:true},{t:"仇",c:false}] },
+  { q:"「孤帆」的「帆」字注音是？", options:[{t:"ㄈㄢˊ",c:true},{t:"ㄈㄢ",c:false}] }
 ];
 
-var cur = 0, score = 0, hp = 3, scrolls = [], answered = false;
+// ================= 房間地圖 =================
+const rooms = {
+  "r_start": {
+    name:"霧起山徑", type:"quiz", qIdx:1,
+    story:"【詩魂低語】忘詩之霧緩緩散開，你聽見遠方傳來一句殘詩……「床前明月光，疑是地上霜，舉頭望明月，低頭＿故鄉。」缺失的字，正是開啟迷宮的第一把鑰匙。",
+    q:"請選出正確的字填入空格：「低頭＿故鄉」", qType:"single",
+    opts:[{id:"A",text:"思"},{id:"B",text:"望"},{id:"C",text:"念"},{id:"D",text:"憶"}], ans:"A",
+    rewardItem:"🌙", onClear:"r_hall1"
+  },
+  "r_hall1": {
+    name:"竹林岔路", type:"nav",
+    story:"霧氣在竹林間流動，三條小徑分別通往不同的方向，隱約能聽見鳥鳴與水聲。",
+    exits:[
+      { dir:"沿小徑向北", target:"r_door1" },
+      { dir:"循鳥鳴向東", target:"r_npc1" },
+      { dir:"望水聲向西", target:"r_flavor1" }
+    ]
+  },
+  "r_flavor1": {
+    name:"墨池遺跡", type:"flavor",
+    story:"你在一池墨水旁發現一塊石碑，上面寫著：\n\n「詩，是古人凝鍊心情的文字。一首五言絕句僅僅二十字，卻能道盡思念、喜悅、惆悵。讀詩時，不妨想像詩人當下的心境——他在何處？看見了什麼？心裡又想著誰？」\n\n池水映出你的倒影，似乎也映出了詩人當年的身影。",
+    onClear:"r_hall1"
+  },
+  "r_npc1": {
+    name:"鳥鳴幻境", type:"npc",
+    story:"林間突然出現一位戴著斗笠的旅人：『此路被忘詩之霧封鎖，你需答對幾道字音字形題，我才能放行……』",
+    onClear:"r_hall1"
+  },
+  "r_door1": {
+    name:"月光石門", type:"lock", reqItem:"🌙",
+    story:"【封印石門】\n門上刻著一輪明月：『請以月光碎片喚醒封印。』",
+    onUnlock:"r_q2", onFail:"r_hall1"
+  },
+  "r_q2": {
+    name:"春曉庭院", type:"quiz", qIdx:2,
+    story:"【詩魂低語】穿過石門，你來到一座開滿落花的庭院。風中傳來孟浩然的低吟：「春眠不覺曉，處處聞啼鳥，夜來風雨聲，花落＿多少。」",
+    q:"請選出正確的字填入空格：「花落＿多少」", qType:"single",
+    opts:[{id:"A",text:"知"},{id:"B",text:"有"},{id:"C",text:"落"},{id:"D",text:"開"}], ans:"A",
+    rewardItem:"🌸", onClear:"r_hall2"
+  },
+  "r_hall2": {
+    name:"霧林分岔", type:"nav",
+    story:"庭院後方又分出幾條霧氣繚繞的小路，每條路似乎都通往截然不同的詩境。",
+    exits:[
+      { dir:"踏霧向北", target:"r_door2" },
+      { dir:"循光向東", target:"r_npc2" },
+      { dir:"望塔向西", target:"r_flavor2" }
+    ]
+  },
+  "r_flavor2": {
+    name:"古塔書齋", type:"flavor",
+    story:"書齋的牆上掛著一幅字，寫著：\n\n「七言絕句比五言絕句多了想像與鋪陳的空間。詩人常常先寫景，後抒情——前兩句描繪眼前所見，後兩句道出心中所感。這種『先景後情』的手法，是古典詩詞中最常見的結構之一。」\n\n書齋角落堆著幾卷古老的詩稿，散發淡淡墨香。",
+    onClear:"r_hall2"
+  },
+  "r_npc2": {
+    name:"光影迷蹤", type:"npc",
+    story:"一位提著燈籠的孩童擋住去路：『想過去嗎？先答對我的字謎吧！』",
+    onClear:"r_hall2"
+  },
+  "r_door2": {
+    name:"落花石門", type:"lock", reqItem:"🌸",
+    story:"【封印石門】\n門上刻著飄落的花瓣：『請以落花殘瓣喚醒封印。』",
+    onUnlock:"r_q3", onFail:"r_hall2"
+  },
+  "r_q3": {
+    name:"鸛雀高樓", type:"quiz", qIdx:3,
+    story:"【詩魂低語】眼前出現一座高聳入雲的樓閣，王之渙的聲音迴盪其中：「白日依山盡，黃河入海流，欲窮千里目，更上一＿樓。」",
+    q:"請選出正確的字填入空格：「更上一＿樓」", qType:"single",
+    opts:[{id:"A",text:"層"},{id:"B",text:"座"},{id:"C",text:"高"},{id:"D",text:"重"}], ans:"A",
+    rewardItem:"🏔️", givesPotion:true, onClear:"r_combine1"
+  },
+  "r_combine1": {
+    name:"詩稿熔爐", type:"combine", target:["🌙","🌸"], resIcon:"🖌️", resName:"墨仙的斷筆",
+    story:"【熔爐微光】熔爐中央浮現提示：『融合月光碎片與落花殘瓣，方能喚出墨仙之筆，繼續前行。』",
+    onUnlock:"r_hall3"
+  },
+  "r_hall3": {
+    name:"楓橋渡口", type:"nav",
+    story:"渡口霧氣瀰漫，江水緩緩流動，遠方隱約傳來鐘聲。三條路徑各自延伸進霧中。",
+    exits:[
+      { dir:"沿江向北", target:"r_q4_pre" },
+      { dir:"循聲向東", target:"r_npc3" },
+      { dir:"望寺向西", target:"r_flavor3" }
+    ]
+  },
+  "r_flavor3": {
+    name:"漁火茶寮", type:"flavor",
+    story:"茶寮老闆遞給你一張紙條：\n\n「張繼〈楓橋夜泊〉描寫的是旅人夜泊時的孤寂與愁思。『月落烏啼霜滿天』寫的是視覺與聽覺交織的夜景；『江楓漁火對愁眠』則點出詩人輾轉難眠的心情。讀詩時，景物往往就是情感的鏡子。」\n\n茶香裊裊，江上的漁火忽明忽暗。",
+    onClear:"r_hall3"
+  },
+  "r_npc3": {
+    name:"江畔迷霧", type:"npc",
+    story:"漁夫划著小船靠近：『想過江嗎？先答對幾題字音字形，我便載你一程！』",
+    onClear:"r_hall3"
+  },
+  "r_door3": {
+    name:"寒鐘石門", type:"lock", reqItem:"🍂",
+    story:"【封印石門】\n門上刻著一座古寺剪影：『此門尚未開啟，你似乎還未尋得寒鐘餘音……』\n(提示：寒鐘餘音藏在下一首詩的謎題中)",
+    onUnlock:"r_q4", onFail:"r_hall3", needsQuizFirst:"r_q4_pre"
+  },
+  "r_q4_pre": {
+    name:"楓橋詩謎", type:"quiz", qIdx:4,
+    story:"【詩魂低語】江霧之中，張繼的聲音緩緩浮現：「月落烏啼霜滿天，江楓漁火對愁眠，姑蘇城外＿寺，夜半鐘聲到客船。」",
+    q:"請選出正確的詞語填入空格：「姑蘇城外＿寺」", qType:"single",
+    opts:[{id:"A",text:"寒山"},{id:"B",text:"靈岩"},{id:"C",text:"虎丘"},{id:"D",text:"天平"}], ans:"A",
+    rewardItem:"🍂", onClear:"r_door3"
+  },
+  "r_q4": {
+    name:"寒山寺內", type:"quiz", qIdx:5,
+    story:"【詩魂低語】鐘聲在耳邊迴盪，彷彿要考驗你對這首詩更深的理解。",
+    q:"〈楓橋夜泊〉中，詩人描寫了視覺與聽覺交織的景象，下列哪些屬於「聽覺」描寫？（複選）", qType:"multi",
+    opts:[{id:"A",text:"月落"},{id:"B",text:"烏啼"},{id:"C",text:"霜滿天"},{id:"D",text:"鐘聲"},{id:"E",text:"漁火"}],
+    ans:["B","D"], rewardItem:"🏮", onClear:"r_hall4"
+  },
+  "r_hall4": {
+    name:"月魂渡橋", type:"nav",
+    story:"橋下流水潺潺，月光灑落水面，宛如鋪了一層碎銀。前方迷宮深處傳來陣陣詞韻。",
+    exits:[
+      { dir:"踏橋向北", target:"r_door4" },
+      { dir:"循韻向東", target:"r_npc4" },
+      { dir:"望月向西", target:"r_flavor4" }
+    ]
+  },
+  "r_flavor4": {
+    name:"望月亭", type:"flavor",
+    story:"亭中石桌上刻著一段話：\n\n「蘇軾〈水調歌頭〉是中秋望月思親之作。『但願人長久，千里共嬋娟』是千古名句——『嬋娟』指的是月亮，這句話的意思是：即使相隔千里，也希望彼此都能平安長久，共同欣賞同一輪明月。」\n\n亭外的月色，恰好與石桌上的字句相互輝映。",
+    onClear:"r_hall4"
+  },
+  "r_npc4": {
+    name:"詞韻迷障", type:"npc",
+    story:"一位撫琴的老者抬頭：『年輕人，先過了我這幾道字音字形的小考驗吧！』",
+    onClear:"r_hall4"
+  },
+  "r_door4": {
+    name:"燈火石門", type:"lock", reqItem:"🏮",
+    story:"【封印石門】\n門上刻著一盞燈籠：『請以引路燈籠喚醒封印。』",
+    onUnlock:"r_q5", onFail:"r_hall4"
+  },
+  "r_q5": {
+    name:"水調高台", type:"quiz", qIdx:6,
+    story:"【詩魂低語】月光下，蘇軾的詞句緩緩浮現：「明月幾時有，把酒問青天……但願人長久，千里＿嬋娟。」",
+    q:"請選出正確的字填入空格：「千里＿嬋娟」", qType:"single",
+    opts:[{id:"A",text:"共"},{id:"B",text:"賞"},{id:"C",text:"望"},{id:"D",text:"享"}], ans:"A",
+    rewardItem:"🌊", givesPotion:true, onClear:"r_combine2"
+  },
+  "r_combine2": {
+    name:"詩魂熔爐", type:"combine", target:["🖌️","🏮"], resIcon:"🗝️", resName:"詩境融合鑰",
+    story:"【熔爐微光】熔爐再次亮起：『融合墨仙之筆與引路燈籠，鑄成開啟詩魂核心的鑰匙。』",
+    onUnlock:"r_door5"
+  },
+  "r_door5": {
+    name:"詩魂核心之門", type:"lock", reqItem:"🗝️",
+    story:"【最終封印】\n巨大的石門上刻著五首詩的片段，門中央有一道鑰匙孔：『五詩合一，詩魂方醒，融合之鑰，開啟終途。』",
+    onUnlock:"r_q6", onFail:"r_hall4"
+  },
+  "r_q6": {
+    name:"詩魂核心", type:"quiz", qIdx:7,
+    story:"【詩魂顯現】五位詩人的身影在霧中緩緩浮現，齊聲問你：『年輕的旅人，你認為，為什麼古人喜歡借「月亮」來表達思念之情？』",
+    q:"請寫下你的看法（至少20字）：為什麼古人常用「月亮」表達思念之情？", qType:"short", minW:20,
+    rewardItem:"🕊️", onClear:"r_end"
+  },
+  "r_end": { name:"詩魂歸位", type:"end" }
+};
+
+const mapLayoutOrder = [
+  "r_start","r_hall1","r_flavor1","r_npc1",
+  "r_door1","r_q2","r_hall2","r_flavor2",
+  "r_npc2","r_door2","r_q3","r_combine1",
+  "r_hall3","r_flavor3","r_npc3","r_q4_pre",
+  "r_door3","r_q4","r_hall4","r_flavor4",
+  "r_npc4","r_door4","r_q5","r_combine2",
+  "r_door5","r_q6","r_end"
+];
+
+let currentRoom = ""; let itemCollection = []; let potions = 0; let visitedNodes = new Set();
+let currentSortOrder = [];
+let activeCombineSlot = null; let combineSelected = [null, null];
+let roomHintsProgress = {};
+let npcVisits = {};
+let currentNpcQuestions = []; let currentNpcIndex = 0;
+let inspectingItem = "";
+
+const shortAnswerHints = {
+  "r_q6": [
+    "💡 階段一：想想看，月亮有什麼特性是太陽或星星沒有的？它每晚都會出現，而且世界各地的人，無論相隔多遠，看到的都是同一輪月亮。",
+    "💡 階段二：當人們身處異鄉、無法與親友相見時，月亮就成了一種「共同的連結」。即使距離遙遠，只要抬頭看月亮，就好像跟對方有了某種聯繫。",
+    "💡 階段三：試著把這個想法寫成完整的句子：月亮的圓缺變化、隨處可見、永恆不變等特質，如何讓古人覺得它適合用來寄託思念？"
+  ]
+};
+
+// ================= 全息地圖 =================
+function updateHologramMap() {
+  const grid = document.getElementById('dynamic-map-grid');
+  if (!grid) return;
+  grid.innerHTML = "";
+  mapLayoutOrder.forEach(id => {
+    if (!rooms[id]) return;
+    let cell = document.createElement('div');
+    if (id === currentRoom) {
+      cell.className = "map-cell current";
+      cell.innerText = rooms[id].name;
+    } else if (visitedNodes.has(id)) {
+      cell.className = "map-cell unlocked";
+      cell.innerText = rooms[id].name;
+      cell.onclick = () => { renderEngine(id); };
+    } else {
+      cell.className = "map-cell";
+      cell.innerText = "？？？";
+    }
+    grid.appendChild(cell);
+  });
+}
+
+// ================= 核心渲染引擎 =================
+function renderEngine(roomId) {
+  try {
+    if (!rooms[roomId]) return;
+    currentRoom = roomId; const room = rooms[roomId]; visitedNodes.add(roomId);
+    document.getElementById('current-location').innerText = `📍 目前位置：【${room.name}】`;
+    document.body.className = room.type === "end" ? "bg-ending" : "";
+    const contentDiv = document.getElementById('game-content'); let html = "";
+    updateHologramMap();
+
+    if (room.type === "nav") {
+      html += `<h2 style="text-align:center; color:var(--accent-color); font-size:18px;">🧭 詩境岔路</h2>`;
+      html += `<div class="story-text" style="text-align:center; font-style:italic;">${room.story}</div>`;
+      html += `<div class="doors-container">`;
+      room.exits.forEach(ex => {
+        let isTargetOpened = visitedNodes.has(ex.target);
+        let tName = isTargetOpened ? rooms[ex.target].name : "未知之境";
+        let tClass = isTargetOpened ? "door-name" : "door-name door-unknown";
+        html += `<div class="door-card" onclick="renderEngine('${ex.target}')">
+                  <div class="door-dir">🚪 ${ex.dir}</div>
+                  <div class="${tClass}">${tName}</div>
+                </div>`;
+      });
+      html += `</div>`;
+    }
+    else if (room.type === "flavor") {
+      html = `<div class="story-box" style="border-color:var(--item-color); color:var(--item-color);">【詩境見聞】</div>
+              <div class="story-text">${room.story}</div>
+              <button type="button" class="action-btn" onclick="renderEngine('${room.onClear}')">收穫見聞，返回岔路</button>`;
+    }
+    else if (room.type === "npc") {
+      let visits = npcVisits[roomId] || 0;
+      let requiredQ = (visits === 0) ? 2 : 4;
+      let pool = [...trapDatabase]; shuffleArray(pool);
+      currentNpcQuestions = pool.slice(0, requiredQ);
+      currentNpcIndex = 0;
+      html = `<div class="story-box" style="border-color:var(--error-color);">【偶遇】</div>
+              <div class="story-text">${room.story}</div>
+              <div class="quiz-card">
+                <div class="type-badge">⚡ 字音字形挑戰（連續答對 ${requiredQ} 題可得墨水）</div>
+                <div id="npc-quiz-area"></div>
+                <div id="npc-msg" class="message"></div>
+                <button type="button" id="npc-leave-btn" class="action-btn hidden" onclick="renderEngine('${room.onClear}')">離開此地</button>
+              </div>`;
+      contentDiv.innerHTML = html; contentDiv.classList.remove('hidden');
+      renderNpcQuestion(roomId);
+      return;
+    }
+    else if (room.type === "lock") {
+      html = `<h2 style="color:var(--item-color); text-align:center; font-size:18px;">${room.name}</h2>
+              <div class="story-text" style="border-color:var(--item-color); text-align:center; white-space:pre-wrap;">${room.story}</div>
+              <div style="color:var(--sub-text); margin-bottom:18px; font-weight:bold; font-size:14px; text-align:center;">
+                👆 點擊上方背包中的道具，嘗試開啟封印 👆
+              </div>
+              <div id="lock-msg" class="message"></div>
+              <button type="button" class="action-btn" style="margin-top:14px; border-color:var(--sub-text); color:var(--sub-text);" onclick="renderEngine('${room.onFail || 'r_hall1'}')">暫且離開，返回岔路</button>`;
+    }
+    else if (room.type === "combine") {
+      activeCombineSlot = null; combineSelected = [null, null];
+      html = `<h2 style="color:var(--error-color); text-align:center; font-size:18px;">${room.name}</h2>
+              <div class="story-text" style="border-color:var(--error-color); text-align:center; white-space:pre-wrap;">${room.story}</div>
+              <div style="font-size:13px; color:var(--sub-text); margin-bottom:14px; font-weight:bold; text-align:center;">
+                💡 點擊下方凹槽選定後，再點擊背包道具放入凹槽
+              </div>
+              <div class="combine-container">
+                <div class="combine-slot" id="slot-1" onclick="selectCombineSlot(1)"><span style="font-size:14px;">凹槽 1</span></div>
+                <div style="font-size:26px; color:var(--error-color);">+</div>
+                <div class="combine-slot" id="slot-2" onclick="selectCombineSlot(2)"><span style="font-size:14px;">凹槽 2</span></div>
+              </div>
+              <button type="button" class="action-btn" style="border-color:var(--error-color); color:var(--error-color); margin-top:18px;" onclick="attemptCombine('${roomId}')">融合詩稿</button>
+              <div id="combine-msg" class="message"></div>`;
+    }
+    else if (room.type === "quiz") {
+      let progress = roomHintsProgress[roomId] || 0;
+      let hints = shortAnswerHints[roomId];
+      let showPotionBtn = (hints && potions > 0 && progress < hints.length) ? 'style="display:block;"' : 'style="display:none;"';
+      let preHintsHtml = "";
+      if (hints && progress > 0) { for (let i=0;i<progress;i++) preHintsHtml += `<div class="msg-hint">${hints[i]}</div>`; }
+
+      html = `<div class="story-box">${room.story}</div>
+              <div class="quiz-card">
+                <div class="question-text">${room.q}</div>
+                <div id="hint-box" class="${progress > 0 ? '' : 'hidden'}">${preHintsHtml}</div>
+                <button type="button" id="potion-btn" class="action-btn potion-btn" ${showPotionBtn} onclick="usePotion('${roomId}')">🖋️ 消耗 1 瓶墨水解鎖提示</button>
+                <div id="interactive-area" style="margin-top:18px;"></div>
+                <div id="word-count-div" class="word-count hidden">字數：0</div>
+                <button type="button" class="action-btn" onclick="submitQuiz('${roomId}')">提交解答</button>
+                <div id="msg-box" class="message"></div>
+              </div>`;
+    }
+    else if (room.type === "end") {
+      document.getElementById('status-ui').classList.add('hidden');
+      document.getElementById('map-ui').classList.add('hidden');
+      document.getElementById('main-container').classList.add('ending-fullscreen');
+
+      let itemsHtml = '';
+      itemCollection.forEach((icon, i) => {
+        let angle = (i / Math.max(itemCollection.length,1)) * 2 * Math.PI;
+        let startX = Math.round(Math.cos(angle) * 170) + 'px';
+        let startY = Math.round(Math.sin(angle) * 170) + 'px';
+        itemsHtml += `<div class="ending-item" style="--startX:${startX}; --startY:${startY}; animation-delay:${i*0.2}s;">${icon}</div>`;
+      });
+
+      html = `
+        <div style="position:absolute; top:14%; text-align:center; color:#e8d9a8; font-size:18px; font-weight:bold; letter-spacing:5px; animation: fadeOutText 3s forwards; z-index:50;">
+          [ 五詩合一・詩魂甦醒 ]
+        </div>
+        <div class="ending-items-container">
+          ${itemsHtml}
+          <div class="scroll-glow"></div>
+          <div class="flying-blossom">🌸</div>
+          <div class="final-text-victory">
+            <h1 style="font-size:34px; margin-bottom:6px; letter-spacing:8px;">詩 魂 歸 位</h1>
+            <div style="font-size:16px; font-weight:bold; letter-spacing:3px;">五首詩稿，重歸詩國</div>
+            <div style="font-size:13px; margin-top:18px; color:#c9a14f;">旅人啊，感謝你喚醒了沉睡的詩魂。願你也能像古人一樣，在文字裡安放心情。</div>
+          </div>
+        </div>`;
+    }
+
+    contentDiv.innerHTML = html; contentDiv.classList.remove('hidden');
+
+    if (room.type === "quiz") {
+      const area = document.getElementById('interactive-area');
+      if (room.qType === "single") {
+        room.opts.forEach(opt => { area.innerHTML += `<label class="option-item"><input type="radio" name="q-choice" value="${opt.id}"><span>${opt.text}</span></label>`; });
+      } else if (room.qType === "multi") {
+        room.opts.forEach(opt => { area.innerHTML += `<label class="option-item"><input type="checkbox" name="q-choice" value="${opt.id}"><span>${opt.text}</span></label>`; });
+      } else if (room.qType === "sort") {
+        currentSortOrder = [...room.opts]; shuffleArray(currentSortOrder); renderSortList();
+      } else {
+        document.getElementById('word-count-div').classList.remove('hidden');
+        area.innerHTML = `<textarea id="short-answer" placeholder="請寫下你的想法..." oninput="updateWordCount(this)"></textarea>`;
+      }
+    }
+  } catch (error) { alert("系統載入異常，請重新整理！錯誤：" + error.message); }
+}
+
+// === NPC 引擎 ===
+function renderNpcQuestion(roomId) {
+  let qData = currentNpcQuestions[currentNpcIndex];
+  let opts = [...qData.options]; shuffleArray(opts);
+  let html = `
+    <div class="question-text">進度（${currentNpcIndex+1}/${currentNpcQuestions.length}）：${qData.q}</div>
+    <div>
+      <label class="option-item"><input type="radio" name="npc-choice" value="${opts[0].c}"><span>${opts[0].t}</span></label>
+      <label class="option-item"><input type="radio" name="npc-choice" value="${opts[1].c}"><span>${opts[1].t}</span></label>
+    </div>
+    <button type="button" class="action-btn" style="border-color:var(--error-color); color:var(--error-color);" onclick="submitNpc('${roomId}')">確認送出</button>
+  `;
+  document.getElementById('npc-quiz-area').innerHTML = html;
+}
+
+function submitNpc(roomId) {
+  const selected = document.querySelector('input[name="npc-choice"]:checked');
+  if (!selected) { showMsg('npc-msg', "⚠️ 必須做出選擇！", false); return; }
+  let qData = currentNpcQuestions[currentNpcIndex];
+  let correctAns = qData.options.find(o=>o.c).t;
+
+  if (selected.value === "true") {
+    currentNpcIndex++;
+    if (currentNpcIndex < currentNpcQuestions.length) {
+      showMsg('npc-msg', `🟢 正確！準備下一題...`, true);
+      setTimeout(() => { hideMsg('npc-msg'); renderNpcQuestion(roomId); }, 900);
+    } else {
+      document.getElementById('npc-quiz-area').innerHTML = "";
+      potions++; updateInventoryUI();
+      npcVisits[roomId] = (npcVisits[roomId] || 0) + 1;
+      showMsg('npc-msg', "🎉 全部答對！獲得【🖋️ 墨水 x 1】", true);
+      document.getElementById('npc-leave-btn').classList.remove('hidden');
+    }
+  } else {
+    document.getElementById('npc-quiz-area').innerHTML = "";
+    showMsg('npc-msg', `❌ 錯誤！正確答案是「${correctAns}」。對方搖頭離去了……`, false);
+    document.getElementById('npc-leave-btn').classList.remove('hidden');
+  }
+}
+
+// === 物品觀察 ===
+function inspectItem() {
+  document.getElementById('modal-inspect-btn').classList.add('hidden');
+  let textDiv = document.getElementById('modal-inspect-text');
+  let info = getItemInfo(inspectingItem);
+  textDiv.innerHTML = info.inspect;
+  textDiv.classList.remove('hidden');
+}
+
+function checkPassword(roomId) {}
+
+function usePotion(roomId) {
+  let hints = shortAnswerHints[roomId];
+  if (!hints) return;
+  let progress = roomHintsProgress[roomId] || 0;
+  if (potions > 0 && progress < hints.length) {
+    potions--; updateInventoryUI();
+    let hintBox = document.getElementById('hint-box');
+    hintBox.innerHTML += `<div class="msg-hint">${hints[progress]}</div>`;
+    hintBox.classList.remove('hidden');
+    roomHintsProgress[roomId] = progress + 1;
+    if (roomHintsProgress[roomId] >= hints.length) { document.getElementById('potion-btn').style.display = 'none'; }
+  }
+}
+
+function submitQuiz(roomId) {
+  const room = rooms[roomId]; let isCorrect = false;
+
+  if (room.qType === "single") {
+    const selected = document.querySelector('input[name="q-choice"]:checked');
+    if (!selected) { showMsg('msg-box', "⚠️ 請先選擇一個答案！", false); return; }
+    isCorrect = (selected.value === room.ans);
+  } else if (room.qType === "multi") {
+    const checkedBoxes = document.querySelectorAll('input[name="q-choice"]:checked');
+    const ansArray = Array.from(checkedBoxes).map(cb => cb.value);
+    if (ansArray.length === 0) { showMsg('msg-box', "⚠️ 請至少選擇一個答案！", false); return; }
+    isCorrect = ansArray.length === room.ans.length && ansArray.every(val => room.ans.includes(val));
+  } else if (room.qType === "sort") {
+    const ids = currentSortOrder.map(i => i.id);
+    isCorrect = ids.every((val, i) => val === room.ans[i]);
+  } else {
+    const field = document.getElementById('short-answer');
+    const ansStr = field ? field.value.trim() : "";
+    if (ansStr.length < room.minW) { showMsg('msg-box', `⚠️ 寫得還不夠完整（需至少 ${room.minW} 字）！`, false); return; }
+    isCorrect = true;
+  }
+
+  if (!isCorrect) {
+    let errMsg = room.qType === "sort" ? "❌ 順序不正確，請重新調整！" : "❌ 答案不正確，再想想看！";
+    showMsg('msg-box', errMsg, false);
+    let progress = roomHintsProgress[roomId] || 0;
+    let hints = shortAnswerHints[roomId];
+    if (hints && potions > 0 && progress < hints.length) { document.getElementById('potion-btn').style.display = 'block'; }
+    return;
+  }
+
+  showMsg('msg-box', "🟢 答對了！獲得詩稿碎片……", true);
+  if (!itemCollection.includes(room.rewardItem)) itemCollection.push(room.rewardItem);
+  if (room.givesPotion) { potions++; }
+  updateInventoryUI();
+  setTimeout(() => { showItemReward(roomId); }, 1300);
+}
+
+function showItemReward(roomId) {
+  const room = rooms[roomId]; const itemInfo = getItemInfo(room.rewardItem);
+  let html = `<div class="item-box" style="margin:0 auto;"><div class="item-icon">${room.rewardItem}</div><div class="item-title">獲得道具：【${itemInfo.title}】</div><div class="item-desc">${itemInfo.desc}</div></div>`;
+  if (room.givesPotion) { html += `<div style="color:var(--success-color); font-weight:bold; text-align:center; margin-top:18px; font-size:15px;">🎉 額外獲得【🖋️ 墨水 x 1】</div>`; }
+  html += `<button type="button" class="action-btn" style="margin-top:26px;" onclick="renderEngine('${room.onClear}')">收下道具，繼續前行</button>`;
+  document.getElementById('game-content').innerHTML = html;
+}
+
+// === 背包與融合 ===
+function handleInventoryClick(idx) {
+  const rawIcon = itemCollection[idx]; const room = rooms[currentRoom];
+  const cleanStr = s => s ? s.replace(/\uFE0F/g, '').trim() : '';
+
+  if (room && room.type === 'lock') {
+    if (cleanStr(rawIcon) === cleanStr(room.reqItem)) {
+      showMsg('lock-msg', '🟢 封印解除！石門緩緩開啟……', true);
+      setTimeout(() => { renderEngine(room.onUnlock); }, 1300);
+    } else {
+      showMsg('lock-msg', '❌ 此物與封印不合，毫無反應。', false);
+      openInspectModal(rawIcon);
+    }
+  } else if (room && room.type === 'combine') {
+    if (activeCombineSlot) {
+      if (cleanStr(combineSelected[0]) === cleanStr(rawIcon) || cleanStr(combineSelected[1]) === cleanStr(rawIcon)) {
+        showMsg('combine-msg', '⚠️ 這個道具已經放入凹槽了！', false); return;
+      }
+      combineSelected[activeCombineSlot-1] = rawIcon;
+      let slotElem = document.getElementById('slot-' + activeCombineSlot);
+      slotElem.innerText = rawIcon; slotElem.classList.remove('active-slot'); slotElem.classList.add('filled');
+      activeCombineSlot = null; hideMsg('combine-msg');
+    } else { openInspectModal(rawIcon); }
+  } else { openInspectModal(rawIcon); }
+}
+
+function openInspectModal(icon) {
+  inspectingItem = icon; const info = getItemInfo(icon);
+  document.getElementById('modal-icon').innerText = icon;
+  document.getElementById('modal-title').innerText = info.title;
+  document.getElementById('modal-desc').innerText = info.desc;
+  document.getElementById('modal-inspect-text').classList.add('hidden');
+  document.getElementById('modal-inspect-btn').classList.remove('hidden');
+  document.getElementById('item-modal').classList.remove('hidden');
+}
+
+function closeItemModal() { document.getElementById('item-modal').classList.add('hidden'); }
+function selectCombineSlot(n) { activeCombineSlot = n; document.getElementById('slot-1').classList.remove('active-slot'); document.getElementById('slot-2').classList.remove('active-slot'); document.getElementById('slot-'+n).classList.add('active-slot'); hideMsg('combine-msg'); }
+
+function attemptCombine(roomId) {
+  let room = rooms[roomId]; const cleanStr = s => s ? s.replace(/\uFE0F/g, '').trim() : '';
+  let target = room.target.map(cleanStr); let c0 = cleanStr(combineSelected[0]); let c1 = cleanStr(combineSelected[1]);
+
+  if (c0 && c1 && target.includes(c0) && target.includes(c1) && c0 !== c1) {
+    showMsg('combine-msg', `🟢 融合成功！煉成【${room.resName}】，前路已開啟！`, true);
+    if (!itemCollection.includes(room.resIcon)) { itemCollection.push(room.resIcon); updateInventoryUI(); }
+    setTimeout(() => { renderEngine(room.onUnlock); }, 1700);
+  } else {
+    showMsg('combine-msg', "❌ 融合失敗！這兩樣道具似乎不合，請重新選擇。", false);
+    combineSelected = [null, null];
+    document.getElementById('slot-1').innerHTML = '<span style="font-size:14px;">凹槽 1</span>';
+    document.getElementById('slot-2').innerHTML = '<span style="font-size:14px;">凹槽 2</span>';
+    document.getElementById('slot-1').className = "combine-slot";
+    document.getElementById('slot-2').className = "combine-slot";
+  }
+}
+
+// === 工具函式 ===
+function updateInventoryUI() {
+  let html = '';
+  itemCollection.forEach((icon, i) => { html += `<span class="inv-item" title="點擊查看" onclick="handleInventoryClick(${i})">${icon}</span>`; });
+  document.getElementById('inventory-list').innerHTML = html;
+  document.getElementById('potion-count').innerText = potions;
+}
+function renderSortList() {
+  const area = document.getElementById('interactive-area'); area.innerHTML = "";
+  currentSortOrder.forEach((item, index) => {
+    area.innerHTML += `<div class="sort-item"><div class="sort-text">${item.text}</div><div class="sort-btns"><button type="button" class="sort-btn" onclick="moveItem(${index},-1)">▲</button><button type="button" class="sort-btn" onclick="moveItem(${index},1)">▼</button></div></div>`;
+  });
+}
+function moveItem(index, dir) {
+  const target = index + dir; if (target < 0 || target >= currentSortOrder.length) return;
+  [currentSortOrder[index], currentSortOrder[target]] = [currentSortOrder[target], currentSortOrder[index]];
+  renderSortList();
+}
+function shuffleArray(arr) { for (let i=arr.length-1;i>0;i--) { const j = Math.floor(Math.random()*(i+1)); [arr[i],arr[j]]=[arr[j],arr[i]]; } }
+function updateWordCount(t) { document.getElementById('word-count-div').innerText = `字數：${t.value.length}`; }
+function showMsg(boxId, text, isSuccess) {
+  const box = document.getElementById(boxId);
+  if (box) { box.innerText = text; box.className = isSuccess ? "message msg-success" : "message msg-error"; }
+}
+function hideMsg(boxId) { const b = document.getElementById(boxId); if (b) b.className = "message hidden"; }
 
 function startGame() {
-  document.getElementById('title-screen').classList.remove('active');
-  document.getElementById('game-screen').classList.add('active');
-  cur = 0; score = 0; hp = 3; scrolls = []; answered = false;
-  loadStage();
-}
-
-function loadStage() {
-  answered = false;
-  var s = stages[cur];
-  document.getElementById('hud-stage').textContent = (cur+1) + ' / 5';
-  updateHp();
-  document.getElementById('hud-score').textContent = score;
-  document.getElementById('scrolls-hud').textContent = scrolls.length ? scrolls.join(' ') : '—';
-  document.getElementById('prog').style.width = (cur / 5 * 100) + '%';
-  document.getElementById('stage-icon').textContent = s.icon;
-  document.getElementById('stage-label').textContent = s.label;
-  document.getElementById('poem-title').textContent = s.title;
-  document.getElementById('poem-author').textContent = s.author;
-
-  var html = '';
-  s.lines.forEach(function(ln, i) {
-    var line = i === s.blankLine
-      ? ln.replace('【　】', '<span class="blank">？</span>')
-      : ln;
-    html += line + '<br>';
-  });
-  document.getElementById('poem-display').innerHTML = html;
-
-  var cb = document.getElementById('choices');
-  cb.innerHTML = '';
-  var shuffled = s.choices.slice().sort(function(){ return Math.random() - .5; });
-  shuffled.forEach(function(c) {
-    var b = document.createElement('button');
-    b.className = 'choice-btn';
-    b.textContent = c;
-    b.onclick = function(){ answer(c, b); };
-    cb.appendChild(b);
-  });
-
-  document.getElementById('feedback').className = 'feedback';
-  document.getElementById('feedback').textContent = '';
-  document.getElementById('hint-box').className = 'hint-box';
-  document.getElementById('hint-box').textContent = '';
-  document.getElementById('next-btn').className = 'next-btn';
-}
-
-function answer(choice, btn) {
-  if (answered) return;
-  answered = true;
-  var s = stages[cur];
-  var allBtns = document.querySelectorAll('.choice-btn');
-  allBtns.forEach(function(b) {
-    b.disabled = true;
-    if (b.textContent === s.answer) b.classList.add('correct');
-  });
-
-  var fb = document.getElementById('feedback');
-  if (choice === s.answer) {
-    score += 20;
-    scrolls.push(s.icon);
-    fb.className = 'feedback show ok';
-    fb.innerHTML = '<strong>✓ 答對了！</strong><br>' + s.explain;
-    document.getElementById('hud-score').textContent = score;
-    document.getElementById('scrolls-hud').textContent = scrolls.join(' ');
-  } else {
-    btn.classList.remove('correct');
-    btn.classList.add('wrong');
-    hp = Math.max(0, hp - 1);
-    updateHp();
-    fb.className = 'feedback show fail';
-    fb.innerHTML = '<strong>✗ 答錯了！正確答案是「' + s.answer + '」</strong><br>' + s.explain;
-    var hb = document.getElementById('hint-box');
-    hb.className = 'hint-box show';
-    hb.textContent = '💡 ' + s.hint;
-  }
-
-  var nb = document.getElementById('next-btn');
-  nb.className = 'next-btn show';
-  nb.textContent = cur < 4 ? '下一關 →' : '查看結果 →';
-}
-
-function updateHp() {
-  var s = '❤️'.repeat(hp) + '🖤'.repeat(3 - hp);
-  document.getElementById('hud-hp').textContent = s;
-}
-
-function nextStage() {
-  cur++;
-  if (cur >= 5) { showEnd(); return; }
-  loadStage();
-}
-
-function showEnd() {
-  document.getElementById('game-screen').classList.remove('active');
-  document.getElementById('end-screen').classList.add('active');
-  document.getElementById('end-score').textContent = score;
-  var found = scrolls.length;
-  document.getElementById('scrolls-row').textContent = scrolls.length ? scrolls.join(' ') : '📭';
-  document.getElementById('scrolls-label').textContent = '找回 ' + found + ' / 5 份詩稿';
-
-  var emoji, title, msg;
-  if (score === 100) {
-    emoji = '🏆'; title = '完美！任務全數完成！';
-    msg = '五首詩稿全數找回，你是最強的詩稿守護者！繼續保持對唐詩宋詞的熱情！';
-  } else if (score >= 80) {
-    emoji = '🎉'; title = '太棒了！幾乎全數找回！';
-    msg = '只差一點點就完美了！再複習一下答錯的詩句，下次一定滿分！';
-  } else if (score >= 60) {
-    emoji = '👍'; title = '不錯！找回大半詩稿！';
-    msg = '多讀幾遍詩，注意每個字的用法，再來挑戰就能更上一層樓！';
-  } else {
-    emoji = '📖'; title = '詩稿還需要你！';
-    msg = '沒關係！回去多複習這幾首詩，熟讀之後再來找回所有詩稿！';
-  }
-  document.getElementById('end-emoji').textContent = emoji;
-  document.getElementById('end-title').textContent = title;
-  document.getElementById('end-msg').textContent = msg;
-}
-
-function restart() {
-  document.getElementById('end-screen').classList.remove('active');
-  document.getElementById('title-screen').classList.add('active');
+  document.getElementById('login-section').classList.add('hidden');
+  document.getElementById('status-ui').classList.remove('hidden');
+  document.getElementById('map-ui').classList.remove('hidden');
+  updateInventoryUI();
+  renderEngine("r_start");
 }
 </script>
 </body>
