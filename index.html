@@ -99,7 +99,7 @@ input.text-input { width: 100%; padding: 13px; background: rgba(255,255,255,0.6)
 .word-count { text-align: right; font-size: 12px; color: var(--sub-text); margin-top: 5px; }
 
 /* ===== 結局動畫 ===== */
-.ending-items-container { position: relative; height: 380px; width: 100%; max-width: 600px; display: flex; justify-content: center; align-items: center; margin-top: 20px; }
+.ending-items-container { position: relative; min-height: 420px; width: 100%; max-width: 600px; display: flex; justify-content: center; align-items: center; margin-top: 20px; padding: 20px 0; }
 @keyframes fadeOutText { 0% { opacity: 1; } 80% { opacity: 1; } 100% { opacity: 0; } }
 .ending-item { position: absolute; font-size: 32px; opacity: 0; animation: converge 3s forwards; }
 @keyframes converge { 0% { transform: translate(var(--startX), var(--startY)) scale(1); opacity: 0; } 20% { opacity: 1; } 80% { transform: translate(0,0) scale(0.5); opacity: 1; filter: brightness(1.4); } 100% { transform: translate(0,0) scale(0); opacity: 0; filter: brightness(2); } }
@@ -107,8 +107,11 @@ input.text-input { width: 100%; padding: 13px; background: rgba(255,255,255,0.6)
 @keyframes explodeLight { 0% { opacity:0; width:2px; } 10% { opacity:1; width:20px; box-shadow:0 0 70px 35px #fff3da; } 100% { opacity:1; width:1800px; height:1800px; border-radius:50%; box-shadow:0 0 250px 120px #fff3da, 0 0 500px 300px #c9a14f; background:#fff8ec; } }
 .flying-blossom { position: absolute; font-size: 60px; opacity: 0; z-index: 20; animation: flyTowards 4s 5s forwards; }
 @keyframes flyTowards { 0% { opacity:0; transform: scale(0.1); } 20% { opacity:1; } 100% { opacity:0; transform: scale(15); } }
-.final-text-victory { position: absolute; z-index: 30; opacity: 0; color: #2a2410; text-shadow: 0 0 20px #fff3da, 0 0 30px #c9a14f; text-align: center; animation: showVictory 2s 6.8s forwards; }
-@keyframes showVictory { 0% { opacity:0; transform: translateY(25px); } 100% { opacity:1; transform: translateY(0); } }
+.final-text-victory { position: absolute; z-index: 30; opacity: 0; color: #2a2410; text-align: center; animation: showVictory 2s 6.8s forwards; width: 90%; max-width: 440px; left: 50%; top: 50%; transform: translate(-50%, -50%); writing-mode: horizontal-tb; }
+.final-text-victory .ft-title { font-size: 32px; font-weight: 700; letter-spacing: 6px; margin-bottom: 10px; text-shadow: 0 0 16px #fff3da, 0 0 26px #c9a14f; line-height: 1.4; }
+.final-text-victory .ft-sub { font-size: 15px; font-weight: bold; letter-spacing: 2px; margin-bottom: 18px; text-shadow: 0 0 10px #fff3da; }
+.final-text-victory .ft-msg { font-size: 13px; line-height: 1.9; color: #6b5a32; background: rgba(255,248,236,0.55); padding: 14px 18px; border-radius: 10px; text-shadow: none; }
+@keyframes showVictory { 0% { opacity:0; transform: translate(-50%, -42%); } 100% { opacity:1; transform: translate(-50%, -50%); } }
 </style>
 </head>
 <body>
@@ -520,9 +523,9 @@ function renderEngine(roomId) {
           <div class="scroll-glow"></div>
           <div class="flying-blossom">🌸</div>
           <div class="final-text-victory">
-            <h1 style="font-size:34px; margin-bottom:6px; letter-spacing:8px;">詩 魂 歸 位</h1>
-            <div style="font-size:16px; font-weight:bold; letter-spacing:3px;">五首詩稿，重歸詩國</div>
-            <div style="font-size:13px; margin-top:18px; color:#c9a14f;">旅人啊，感謝你喚醒了沉睡的詩魂。願你也能像古人一樣，在文字裡安放心情。</div>
+            <div class="ft-title">詩魂歸位</div>
+            <div class="ft-sub">五首詩稿，重歸詩國</div>
+            <div class="ft-msg">旅人啊，感謝你喚醒了沉睡的詩魂。<br>願你也能像古人一樣，在文字裡安放心情。</div>
           </div>
         </div>`;
     }
